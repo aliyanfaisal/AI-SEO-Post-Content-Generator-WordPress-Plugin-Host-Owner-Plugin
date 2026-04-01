@@ -262,7 +262,12 @@ class AISCPH_Claude {
 		$prompt .= "Tone: {$tone}\n";
 
 		if ( ! empty( $negative_keywords ) ) {
-			$prompt .= "Avoid: {$negative_keywords}\n";
+			$prompt .= "Avoid these keywords and topics: {$negative_keywords}\n";
+		}
+
+		$restrictions = trim( $prefs['content_restrictions'] ?? '' );
+		if ( ! empty( $restrictions ) ) {
+			$prompt .= "\nCONTENT RESTRICTIONS — strictly follow these rules for every sentence written:\n{$restrictions}\n";
 		}
 		if ( ! empty( $tone_examples ) ) {
 			$prompt .= "Match this voice:\n{$tone_examples}\n";
