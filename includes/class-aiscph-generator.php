@@ -53,7 +53,7 @@ class AISCPH_Generator {
 				$url = AISCPH_Image::get_image_url( $query, $preferences );
 				if ( $url ) {
 					$fetched_urls[ $index ] = $url;
-					self::log( "Image {$index} fetched for query "{$query}": {$url}", $preferences['domain'] ?? '' );
+					self::log( 'Image ' . $index . ' fetched: ' . $query . ' => ' . $url, $preferences['domain'] ?? '' );
 				} else {
 					self::log( "Image {$index} fetch failed for query: {$query}", $preferences['domain'] ?? '' );
 				}
