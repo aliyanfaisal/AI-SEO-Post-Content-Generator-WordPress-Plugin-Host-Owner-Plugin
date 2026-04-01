@@ -36,20 +36,40 @@ class AISCPH_Generator {
 			$preferences['domain'] ?? ''
 		);
 
-		// Fetch image if needed
+		// Fetch images if stock images or thumbnails enabled
 		$want_stock    = ! empty( $preferences['enable_stock_images'] ) && $preferences['enable_stock_images'] === '1';
 		$want_ai_thumb = ! empty( $preferences['enable_thumbnails'] )   && $preferences['enable_thumbnails']   === '1';
 
 		if ( $want_stock || $want_ai_thumb ) {
-			$image_prompt = ! empty( $result['image_prompt'] ) ? $result['image_prompt'] : $result['title'];
-			$image_url    = AISCPH_Image::get_image_url( $image_prompt, $preferences );
-			if ( $image_url ) {
-				$result['thumbnail_url'] = $image_url;
-				self::log( 'Image URL added to payload: ' . $image_url, $preferences['domain'] ?? '' );
-			} else {
-				self::log( 'Image fetch failed or no API key set.', $preferences['domain'] ?? '' );
+			$image_queries = $result['image_queries'] ?? array();
+
+			// Fallback: if Claude returned no image queries use post title
+			if ( empty( $image_queries ) ) {
+				$image_queries = array( 1 => $result['title'] ?? 'blog post header' );
 			}
+
+			$fetched_urls = array();
+			foreach ( $image_queries as $index => $query ) {
+				$url = AISCPH_Image::get_image_url( $query, $preferences );
+				if ( $url ) {
+					$fetched_urls[ $index ] = $url;
+					self::log( "Image {$index} fetched for query "{$query}": {$url}", $preferences['domain'] ?? '' );
+				} else {
+					self::log( "Image {$index} fetch failed for query: {$query}", $preferences['domain'] ?? '' );
+				}
+			}
+
+			// image_1 is always the featured image
+			if ( ! empty( $fetched_urls[1] ) ) {
+				$result['thumbnail_url'] = $fetched_urls[1];
+			}
+
+			// Pass all fetched URLs indexed so client can replace {{IMAGE_N}} placeholders
+			$result['image_urls'] = $fetched_urls;
 		}
+
+		// Clean up internal field not needed by client
+		unset( $result['image_queries'] );
 
 		return array(
 			'success' => true,

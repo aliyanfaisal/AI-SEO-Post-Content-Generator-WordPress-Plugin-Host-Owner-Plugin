@@ -180,29 +180,66 @@ class AISCPH_Claude {
 	 * Shared response format rules.
 	 */
 	private static function get_format_rules() {
-		$rules  = "RESPONSE FORMAT — use exactly these delimiters:\n";
-		$rules .= "[TITLE]post title[/TITLE]\n";
-		$rules .= "[EXCERPT]1-2 sentence summary[/EXCERPT]\n";
+		$rules  = "RESPONSE FORMAT — output ONLY these delimiters in this exact order, nothing else before or after:\n\n";
+
+		$rules .= "[TITLE]The post title[/TITLE]\n";
+		$rules .= "[EXCERPT]1-2 sentence post summary[/EXCERPT]\n";
 		$rules .= "[CATEGORIES]Category One,Category Two[/CATEGORIES]\n";
-		$rules .= "[TAGS]tag1,tag2,tag3[/TAGS]\n";
-		$rules .= "[SEO_TITLE]SEO optimized title[/SEO_TITLE]\n";
-		$rules .= "[SEO_DESC]meta description under 160 chars[/SEO_DESC]\n";
-		$rules .= "[IMAGE_PROMPT]concise English description (2-10 words) for stock image search[/IMAGE_PROMPT]\n";
-		$rules .= "[FOCUS_KEYWORD]the single primary SEO keyword phrase[/FOCUS_KEYWORD]\n";
-		$rules .= "[OG_TITLE]Open Graph title for social sharing (max 60 chars)[/OG_TITLE]\n";
-		$rules .= "[OG_DESC]Open Graph description (max 160 chars)[/OG_DESC]\n";
-		$rules .= "[TWITTER_TITLE]Twitter card title (max 70 chars)[/TWITTER_TITLE]\n";
-		$rules .= "[TWITTER_DESC]Twitter card description (max 200 chars)[/TWITTER_DESC]\n";
+		$rules .= "[TAGS]tag1,tag2,tag3,tag4,tag5[/TAGS]\n";
+		$rules .= "[SEO_TITLE]SEO title max 60 chars[/SEO_TITLE]\n";
+		$rules .= "[SEO_DESC]SEO meta description max 160 chars[/SEO_DESC]\n";
+		$rules .= "[FOCUS_KEYWORD]primary SEO keyword phrase[/FOCUS_KEYWORD]\n";
+		$rules .= "[OG_TITLE]Open Graph title max 60 chars[/OG_TITLE]\n";
+		$rules .= "[OG_DESC]Open Graph description max 160 chars[/OG_DESC]\n";
+		$rules .= "[TWITTER_TITLE]Twitter card title max 70 chars[/TWITTER_TITLE]\n";
+		$rules .= "[TWITTER_DESC]Twitter card description max 200 chars[/TWITTER_DESC]\n";
 		$rules .= "[SCHEMA_TYPE]Article or BlogPosting or HowTo or FAQPage[/SCHEMA_TYPE]\n";
-		$rules .= "[CONTENT]\n<h2>...</h2>\n<p>...</p>\n[/CONTENT]\n\n";
-		$rules .= "Rules:\n";
-		$rules .= "- Output ONLY the delimited sections, nothing else.\n";
-		$rules .= "- CONTENT must be valid HTML: <h2>, <h3>, <p>, <ul>, <li>, <strong>.\n";
-		$rules .= "- CATEGORIES and TAGS: comma-separated on one line.\n";
-		$rules .= "- IMAGE_PROMPT: always in English regardless of content language.\n";
-		$rules .= "- SCHEMA_TYPE: pick the most appropriate (Article, BlogPosting, HowTo, FAQPage).\n";
-		$rules .= "- CRITICAL: Always close [/CONTENT]. If running low on space, end content early but always write [/CONTENT].\n";
+
+		$rules .= "\n[IMAGES]\n";
+		$rules .= "image_1: concise English search query for the FEATURED image (5-8 words)\n";
+		$rules .= "image_2: concise English search query for first INLINE image (5-8 words)\n";
+		$rules .= "image_3: concise English search query for second INLINE image (5-8 words)\n";
+		$rules .= "[/IMAGES]\n";
+
+		$rules .= "\n[CONTENT]\n";
+		$rules .= "<h2>First Section Heading</h2>\n";
+		$rules .= "<p>Paragraph text...</p>\n";
+		$rules .= "{{IMAGE_2}}\n";
+		$rules .= "<h2>Second Section Heading</h2>\n";
+		$rules .= "<p>More paragraph text...</p>\n";
+		$rules .= "{{IMAGE_3}}\n";
+		$rules .= "<p>Closing paragraph.</p>\n";
+		$rules .= "[/CONTENT]\n\n";
+
+		$rules .= "RULES:\n";
+		$rules .= "- Output ONLY the delimited sections above. No preamble, no commentary.\n";
+		$rules .= "- CONTENT must use valid HTML: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>.\n";
+		$rules .= "- CATEGORIES and TAGS: comma-separated on a single line.\n";
+		$rules .= "- All image queries in [IMAGES] must be in English regardless of content language.\n";
+		$rules .= "- image_1 is the featured image — do NOT place {{IMAGE_1}} anywhere in CONTENT.\n";
+		$rules .= "- Place {{IMAGE_2}}, {{IMAGE_3}} etc. between paragraphs in CONTENT where relevant, never inside a <p> tag.\n";
+		$rules .= "- {{IMAGE_N}} index must match the corresponding image_N entry in [IMAGES].\n";
+		$rules .= "- SCHEMA_TYPE: choose the single most appropriate schema type.\n";
+		$rules .= "- CRITICAL: Always close [/CONTENT]. If running low on tokens, finish the sentence and close the tag.\n";
 		return $rules;
+	}
+
+	/**
+	 * Parse the [IMAGES] block into an indexed array of search queries.
+	 * Returns: [ 1 => 'query for featured image', 2 => 'query for inline image', ... ]
+	 */
+	private static function parse_images_block( $text ) {
+		$raw = self::extract( $text, 'IMAGES' );
+		if ( empty( $raw ) ) return array();
+
+		$queries = array();
+		foreach ( explode( "\n", $raw ) as $line ) {
+			$line = trim( $line );
+			if ( preg_match( '/^image_(\d+)\s*:\s*(.+)$/i', $line, $m ) ) {
+				$queries[ (int) $m[1] ] = trim( $m[2] );
+			}
+		}
+		return $queries;
 	}
 
 	// ---------------------------------------------------------------
@@ -261,7 +298,7 @@ class AISCPH_Claude {
 			'title'         => self::extract( $text, 'TITLE' ),
 			'excerpt'       => self::extract( $text, 'EXCERPT' ),
 			'content'       => self::extract_content( $text ),
-			'image_prompt'  => self::extract( $text, 'IMAGE_PROMPT' ),
+			'image_queries' => self::parse_images_block( $text ),
 			'focus_keyword' => self::extract( $text, 'FOCUS_KEYWORD' ),
 			'og_title'      => self::extract( $text, 'OG_TITLE' ),
 			'og_description'=> self::extract( $text, 'OG_DESC' ),
@@ -296,6 +333,9 @@ class AISCPH_Claude {
 			'twitter_description' => $fields['tw_description'] ?: $seo_desc,
 			'schema_type'         => $fields['schema_type']    ?: 'Article',
 		);
+
+		// image_1 is the featured image — expose as image_prompt for generator
+		$fields['image_prompt'] = $fields['image_queries'][1] ?? $fields['title'];
 
 		unset( $fields['seo_title'], $fields['seo_desc'], $fields['focus_keyword'],
 			   $fields['og_title'], $fields['og_description'], $fields['tw_title'],

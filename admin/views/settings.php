@@ -123,7 +123,7 @@
 								<?php endif; ?>
 							</label>
 							<textarea id="post_generation_instructions" name="post_generation_instructions" rows="10"
-								placeholder="<?php esc_attr_e( 'Paste your full content instruction here.', 'aiscp-host' ); ?>"
+								placeholder="<?php esc_attr_e( 'Define how Claude should write content for your clients. Include tone guidelines, writing rules, content structure requirements, SEO standards, and any domain-specific instructions the AI must follow on every post generation.', 'aiscp-host' ); ?>"
 							><?php echo esc_textarea( AISCPH_Settings::get( 'post_generation_instructions', '' ) ); ?></textarea>
 							 
 						</div>
