@@ -108,6 +108,48 @@
 				</div>
 			</div>
 
+			<!-- Section Prompts -->
+			<div class="aiscph-card">
+				<div class="aiscph-card-header">
+					<h2><?php _e( 'Post Section Prompts', 'aiscp-host' ); ?></h2>
+					<p><?php _e( 'Define named sections and their dedicated prompts. Claude will generate each section in order, strictly following each prompt. Cached for token efficiency.', 'aiscp-host' ); ?></p>
+				</div>
+				<div class="aiscph-card-body">
+
+					<div id="aiscph-sections-repeater">
+						<?php
+						$sections = AISCPH_Settings::get_sections();
+						if ( empty( $sections ) ) {
+							$sections = array( array( 'name' => '', 'prompt' => '' ) );
+						}
+						foreach ( $sections as $i => $section ) :
+						?>
+						<div class="aiscph-section-row" data-index="<?php echo $i; ?>">
+							<div class="aiscph-section-row-header">
+								<span class="aiscph-section-row-num"><?php echo $i + 1; ?></span>
+								<input type="text"
+									name="sections[<?php echo $i; ?>][name]"
+									class="aiscph-section-name"
+									placeholder="<?php esc_attr_e( 'e.g. Introduction, Main Content, FAQ, Summary', 'aiscp-host' ); ?>"
+									value="<?php echo esc_attr( $section['name'] ); ?>">
+								<button type="button" class="aiscph-remove-section" title="Remove section">&times;</button>
+							</div>
+							<textarea
+								name="sections[<?php echo $i; ?>][prompt]"
+								class="aiscph-section-prompt"
+								rows="4"
+								placeholder="<?php esc_attr_e( 'Write the specific prompt for this section. Claude will follow this exactly when generating this part of the post.', 'aiscp-host' ); ?>"><?php echo esc_textarea( $section['prompt'] ); ?></textarea>
+						</div>
+						<?php endforeach; ?>
+					</div>
+
+					<button type="button" id="aiscph-add-section" class="aiscph-btn aiscph-btn-ghost" style="margin-top:12px;">
+						+ <?php _e( 'Add Section', 'aiscp-host' ); ?>
+					</button>
+
+				</div>
+			</div>
+
 			<!-- Global Prompt -->
 			<div class="aiscph-card">
 				<div class="aiscph-card-header">

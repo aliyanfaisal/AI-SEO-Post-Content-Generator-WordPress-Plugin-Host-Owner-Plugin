@@ -31,6 +31,15 @@ class AISCPH_Settings {
 		return AISCPH_Crypto::decrypt( get_option( 'aiscph_shutterstock_api_secret', '' ) );
 	}
 
+	public static function get_sections() {
+		$sections = get_option( 'aiscph_sections', array() );
+		if ( ! is_array( $sections ) ) return array();
+		// Filter out empty rows
+		return array_values( array_filter( $sections, function( $s ) {
+			return ! empty( $s['name'] ) || ! empty( $s['prompt'] );
+		} ) );
+	}
+
 	public static function save( $data ) {
 		// Encrypt API keys if provided and not masked
 		$encrypted_keys = array( 'claude_api_key', 'openai_api_key', 'pexels_api_key', 'unsplash_api_key', 'shutterstock_api_key', 'shutterstock_api_secret' );
@@ -41,6 +50,19 @@ class AISCPH_Settings {
 		}
 
 		// Plain settings
+		// Save sections repeater
+		if ( isset( $data['sections'] ) && is_array( $data['sections'] ) ) {
+			$sections = array();
+			foreach ( $data['sections'] as $section ) {
+				$name   = sanitize_text_field( $section['name'] ?? '' );
+				$prompt = sanitize_textarea_field( $section['prompt'] ?? '' );
+				if ( ! empty( $name ) || ! empty( $prompt ) ) {
+					$sections[] = array( 'name' => $name, 'prompt' => $prompt );
+				}
+			}
+			update_option( 'aiscph_sections', $sections );
+		}
+
 		$plain_fields = array( 'global_prompt', 'post_generation_instructions', 'max_tokens', 'max_content_words', 'default_model', 'stock_image_service' ); // note: image API keys handled via encrypted_keys above
 		foreach ( $plain_fields as $field ) {
 			if ( isset( $data[ $field ] ) ) {

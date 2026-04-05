@@ -34,7 +34,7 @@ class AISCPH_Claude {
 		$system_blocks = self::build_system_blocks( $preferences, $max_tokens, $max_content_words, $instructions );
 
 		$response = wp_remote_post( self::API_URL, array(
-			'timeout' => 90,
+			'timeout' => 600,
 			'headers' => array(
 				'x-api-key'         => $api_key,
 				'anthropic-version' => '2023-06-01',
@@ -287,6 +287,20 @@ class AISCPH_Claude {
 
 		if ( ! empty( $prefs['fact_checking'] ) && $prefs['fact_checking'] === '1' ) {
 			$prompt .= "Ensure all facts are accurate.\n";
+		}
+
+		// Section prompts — each named section with its dedicated prompt
+		$sections = AISCPH_Settings::get_sections();
+		if ( ! empty( $sections ) ) {
+			$prompt .= "\n\n=== MANDATORY POST STRUCTURE ===\n";
+			$prompt .= "You MUST generate the post in exactly these sections, in this order. Follow each section prompt strictly and completely — do not skip, merge, or reorder any section:\n\n";
+			foreach ( $sections as $i => $section ) {
+				$num    = $i + 1;
+				$name   = strtoupper( $section['name'] );
+				$sprompt = $section['prompt'];
+				$prompt .= "SECTION {$num} — {$name}:\n{$sprompt}\n\n";
+			}
+			$prompt .= "Place all section content inside the [CONTENT] block in the exact order above. This structure is mandatory and overrides any other content formatting instructions.\n";
 		}
 
 		return $prompt;

@@ -27,7 +27,10 @@
 		$spinner.show();
 		$btn.prop('disabled', true);
 
-		// Use FormData to safely handle large payloads
+		// Reindex before saving so array keys are sequential
+		reindexSections();
+
+		// Use FormData to safely handle large payloads and nested arrays
 		var formData = new FormData(this);
 		formData.append('action', 'aiscph_save_settings');
 		formData.append('nonce', AISCPH.nonce);
@@ -71,6 +74,45 @@
 		var isPass   = $input.attr('type') === 'password';
 		$input.attr('type', isPass ? 'text' : 'password');
 		$(this).find('.eye-show').text(isPass ? '🔒' : '👁');
+	});
+
+	// =====================
+	// Section Prompts Repeater
+	// =====================
+	function reindexSections() {
+		$('#aiscph-sections-repeater .aiscph-section-row').each(function (i) {
+			$(this).attr('data-index', i);
+			$(this).find('.aiscph-section-row-num').text(i + 1);
+			$(this).find('.aiscph-section-name').attr('name', 'sections[' + i + '][name]');
+			$(this).find('.aiscph-section-prompt').attr('name', 'sections[' + i + '][prompt]');
+		});
+	}
+
+	$('#aiscph-add-section').on('click', function () {
+		var count = $('#aiscph-sections-repeater .aiscph-section-row').length;
+		var $row  = $(
+			'<div class="aiscph-section-row" data-index="' + count + '">' +
+				'<div class="aiscph-section-row-header">' +
+					'<span class="aiscph-section-row-num">' + (count + 1) + '</span>' +
+					'<input type="text" name="sections[' + count + '][name]" class="aiscph-section-name" placeholder="e.g. Introduction, Main Content, FAQ, Summary">' +
+					'<button type="button" class="aiscph-remove-section" title="Remove">&times;</button>' +
+				'</div>' +
+				'<textarea name="sections[' + count + '][prompt]" class="aiscph-section-prompt" rows="4" placeholder="Write the specific prompt for this section. Claude will follow this exactly when generating this part of the post."></textarea>' +
+			'</div>'
+		);
+		$('#aiscph-sections-repeater').append($row);
+		$row.find('.aiscph-section-name').focus();
+	});
+
+	$(document).on('click', '.aiscph-remove-section', function () {
+		var total = $('#aiscph-sections-repeater .aiscph-section-row').length;
+		if (total <= 1) {
+			// Clear instead of remove if it's the last row
+			$(this).closest('.aiscph-section-row').find('input, textarea').val('');
+			return;
+		}
+		$(this).closest('.aiscph-section-row').remove();
+		reindexSections();
 	});
 
 })(jQuery);

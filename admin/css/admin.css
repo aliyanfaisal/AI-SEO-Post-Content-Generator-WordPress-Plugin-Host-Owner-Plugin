@@ -550,3 +550,103 @@
 	color: var(--h-text-muted);
 	border: 1px solid var(--h-border);
 }
+
+/* =====================
+   Section Prompts Repeater
+   ===================== */
+.aiscph-section-row {
+	border: 1.5px solid var(--h-border);
+	border-radius: var(--h-radius-sm);
+	padding: 14px;
+	margin-bottom: 12px;
+	background: #FAFBFC;
+	transition: border-color .15s;
+}
+
+.aiscph-section-row:hover {
+	border-color: var(--h-accent);
+}
+
+.aiscph-section-row-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.aiscph-section-row-num {
+	width: 26px;
+	height: 26px;
+	background: var(--h-accent);
+	color: #fff;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.aiscph-section-name {
+	flex: 1;
+	padding: 7px 12px;
+	border: 1.5px solid var(--h-border);
+	border-radius: var(--h-radius-sm);
+	font-size: 13px;
+	font-family: var(--font);
+	color: var(--h-text);
+	background: #fff;
+	transition: border-color .15s;
+}
+
+.aiscph-section-name:focus {
+	outline: none;
+	border-color: var(--h-accent);
+	box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+
+.aiscph-remove-section {
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border: 1.5px solid var(--h-border);
+	border-radius: var(--h-radius-sm);
+	color: var(--h-text-muted);
+	font-size: 16px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: all .15s;
+	line-height: 1;
+	padding: 0;
+}
+
+.aiscph-remove-section:hover {
+	background: var(--h-danger-light);
+	border-color: var(--h-danger);
+	color: var(--h-danger);
+}
+
+.aiscph-section-prompt {
+	width: 100%;
+	padding: 9px 12px;
+	border: 1.5px solid var(--h-border);
+	border-radius: var(--h-radius-sm);
+	font-size: 13px;
+	font-family: var(--font);
+	color: var(--h-text);
+	background: #fff;
+	resize: vertical;
+	box-sizing: border-box;
+	transition: border-color .15s;
+	min-height: 90px;
+}
+
+.aiscph-section-prompt:focus {
+	outline: none;
+	border-color: var(--h-accent);
+	box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
