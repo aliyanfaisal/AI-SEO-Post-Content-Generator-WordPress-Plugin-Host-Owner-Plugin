@@ -130,8 +130,29 @@ class AISCPH_Claude {
 			);
 		}
 
-		// Block 2 — NOT CACHED: Dynamic system prompt
-		// Changes per request (language, tone settings, token budget, format rules)
+		// Block 2 — CACHED: Section prompts
+		// Each change to section content auto-invalidates this cache block
+		$sections = AISCPH_Settings::get_sections();
+		if ( ! empty( $sections ) ) {
+			$sections_text  = "=== MANDATORY POST STRUCTURE ===\n";
+			$sections_text .= "You MUST generate the post in exactly these sections, in this exact order. ";
+			$sections_text .= "Follow each section prompt strictly and completely. Do not skip, merge, or reorder any section. ";
+			$sections_text .= "This structure takes priority over all other formatting instructions.\n\n";
+			foreach ( $sections as $i => $section ) {
+				$num     = $i + 1;
+				$name    = strtoupper( $section['name'] );
+				$sprompt = $section['prompt'];
+				$sections_text .= "SECTION {$num} — {$name}:\n{$sprompt}\n\n";
+			}
+			$blocks[] = array(
+				'type'          => 'text',
+				'text'          => $sections_text,
+				'cache_control' => array( 'type' => 'ephemeral' ),
+			);
+		}
+
+		// Block 3 — NOT CACHED: Dynamic system prompt
+		// Changes per request (language, global_prompt, token budget, format rules)
 		$blocks[] = array(
 			'type' => 'text',
 			'text' => self::build_dynamic_prompt( $prefs, $max_tokens, $max_content_words, empty( $instructions ) ),
@@ -287,20 +308,6 @@ class AISCPH_Claude {
 
 		if ( ! empty( $prefs['fact_checking'] ) && $prefs['fact_checking'] === '1' ) {
 			$prompt .= "Ensure all facts are accurate.\n";
-		}
-
-		// Section prompts — each named section with its dedicated prompt
-		$sections = AISCPH_Settings::get_sections();
-		if ( ! empty( $sections ) ) {
-			$prompt .= "\n\n=== MANDATORY POST STRUCTURE ===\n";
-			$prompt .= "You MUST generate the post in exactly these sections, in this order. Follow each section prompt strictly and completely — do not skip, merge, or reorder any section:\n\n";
-			foreach ( $sections as $i => $section ) {
-				$num    = $i + 1;
-				$name   = strtoupper( $section['name'] );
-				$sprompt = $section['prompt'];
-				$prompt .= "SECTION {$num} — {$name}:\n{$sprompt}\n\n";
-			}
-			$prompt .= "Place all section content inside the [CONTENT] block in the exact order above. This structure is mandatory and overrides any other content formatting instructions.\n";
 		}
 
 		return $prompt;
