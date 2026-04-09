@@ -278,7 +278,24 @@ class AISCPH_Claude {
 		$kw_list  = array_filter( array_map( 'trim', explode( "\n", $keywords ) ) );
 		$focus_kw = ! empty( $kw_list ) ? $kw_list[ array_rand( $kw_list ) ] : 'general topic';
 
-		$prompt  = "Write a comprehensive SEO blog post about: \"{$focus_kw}\"\n";
+		$prompt = '';
+
+		// Reference posts — injected at the very top with highest priority
+		$use_ref     = ! empty( $prefs['use_reference_posts'] ) && $prefs['use_reference_posts'] === '1';
+		$ref_prompt  = trim( $prefs['reference_posts_prompt'] ?? '' );
+		$ref_urls    = $prefs['reference_urls'] ?? array();
+
+		if ( $use_ref && ! empty( $ref_prompt ) && ! empty( $ref_urls ) ) {
+			$prompt .= "####very very very important####\n";
+			$prompt .= $ref_prompt . "\n\n";
+			$prompt .= "Reference URLs to use as source material:\n";
+			foreach ( $ref_urls as $url ) {
+				$prompt .= "- " . esc_url( $url ) . "\n";
+			}
+			$prompt .= "####end of very important instruction####\n\n";
+		}
+
+		$prompt .= "Write a comprehensive SEO blog post about: \"{$focus_kw}\"\n";
 		$prompt .= "Writing style: {$style}\n";
 		$prompt .= "Tone: {$tone}\n";
 
