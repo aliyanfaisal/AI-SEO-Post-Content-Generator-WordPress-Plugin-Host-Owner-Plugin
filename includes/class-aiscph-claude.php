@@ -33,6 +33,17 @@ class AISCPH_Claude {
 		// Build system prompt blocks
 		$system_blocks = self::build_system_blocks( $preferences, $max_tokens, $max_content_words, $instructions );
 
+		// Store full payload for debugging
+		update_option( 'aiscph_debug_last_payload', array(
+			'time'             => current_time( 'mysql' ),
+			'reference_mode'   => ! empty( $preferences['reference_mode'] ),
+			'system_blocks'    => $system_blocks,
+			'user_prompt'      => self::build_prompt( $preferences ),
+			'max_tokens'       => $max_tokens,
+			'max_words'        => $max_content_words,
+			'domain'           => $preferences['domain'] ?? '',
+		) );
+
 		$response = wp_remote_post( self::API_URL, array(
 			'timeout' => 600,
 			'headers' => array(
@@ -130,9 +141,11 @@ class AISCPH_Claude {
 			);
 		}
 
-		// Block 2 — CACHED: Section prompts
-		// Each change to section content auto-invalidates this cache block
-		$sections = AISCPH_Settings::get_sections();
+		// Skip section prompts entirely for reference mode
+		$is_reference_mode = ! empty( $prefs['reference_mode'] );
+
+		// Block 2 — CACHED: Section prompts (skipped in reference mode)
+		$sections = $is_reference_mode ? array() : AISCPH_Settings::get_sections();
 		if ( ! empty( $sections ) ) {
 			$sections_text  = "=== MANDATORY POST STRUCTURE ===\n";
 			$sections_text .= "You MUST generate the post in exactly these sections, in this exact order. ";
@@ -173,9 +186,12 @@ class AISCPH_Claude {
 		$content_budget = max( 500, $max_tokens - 300 );
 
 		$system = '';
+		$is_reference = ! empty( $prefs['reference_mode'] );
 
-		// Only add base intro when no instructions file is set
-		if ( $include_base ) {
+		if ( $is_reference ) {
+			// Reference mode: different persona focused on reading and rewriting
+			$system .= "You are an expert content writer and editor. I will provide you with reference post URLs and a prompt. Your task is to read the content from those URLs and create a brand new, original, high-quality post based on them. Do not copy — rewrite, improve, and expand the content.\n";
+		} elseif ( $include_base ) {
 			$system .= "You are an expert SEO content writer. Write high-quality, human-sounding blog posts optimized for search engines.\n";
 		}
 

@@ -111,6 +111,7 @@ class AISCPH_Admin {
 		delete_option( 'aiscph_debug_claude_raw' );
 		delete_option( 'aiscph_debug_webhook_payload' );
 		delete_option( 'aiscph_debug_webhook_response' );
+		delete_option( 'aiscph_debug_last_payload' );
 
 		wp_send_json_success( array( 'message' => __( 'Log cleared.', 'aiscp-host' ) ) );
 	}

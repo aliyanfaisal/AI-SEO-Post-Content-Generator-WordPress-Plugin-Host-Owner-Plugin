@@ -3,7 +3,7 @@
  * Plugin Name: AI SEO Content — Host Plugin
  * Plugin URI:  https://aliyanfaisal.com
  * Description: Host plugin for AI SEO Content Generator. Handles licensing, Claude AI generation, and post delivery to client sites.
- * Version:     1.0.7
+ * Version:     1.0.8
  * Author:      Aliyan Faisal
  * Author URI:  https://aliyanfaisal.com
  * Text Domain: aiscp-host
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'AISCPH_VERSION',    '1.0.7' );
+define( 'AISCPH_VERSION',    '1.0.8' );
 define( 'AISCPH_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'AISCPH_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 define( 'AISCPH_PLUGIN_FILE', __FILE__ );
